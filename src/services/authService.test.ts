@@ -1,13 +1,30 @@
-import { describe, expect, it, beforeEach } from 'vitest';
+// @vitest-environment jsdom
+import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import { authService } from './authService';
 
 describe('AuthService Suite', () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.restoreAllMocks();
   });
 
-  describe('login (mock execution mode)', () => {
-    it('successfully logs in with valid credentials', async () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  describe('login', () => {
+    it('successfully logs in with valid credentials and stores token and remembered email', async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          success: true,
+          message: 'Successfully signed in.',
+          token: 'mock_jwt_token',
+          user: { id: 'usr_1', email: 'user@truson.io', fullName: 'Test User' },
+        }),
+      });
+      vi.stubGlobal('fetch', mockFetch);
+
       const response = await authService.login({
         email: 'user@truson.io',
         password: 'validpassword123',
@@ -15,12 +32,20 @@ describe('AuthService Suite', () => {
       });
 
       expect(response.success).toBe(true);
-      expect(response.token).toBeDefined();
+      expect(response.token).toBe('mock_jwt_token');
       expect(response.user?.email).toBe('user@truson.io');
       expect(authService.getRememberedEmail()).toBe('user@truson.io');
+      expect(authService.getToken()).toBe('mock_jwt_token');
     });
 
-    it('throws error for wrong password', async () => {
+    it('throws error for wrong password (401)', async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 401,
+        json: async () => ({ message: 'Invalid email or password.' }),
+      });
+      vi.stubGlobal('fetch', mockFetch);
+
       await expect(
         authService.login({
           email: 'user@truson.io',
@@ -30,7 +55,14 @@ describe('AuthService Suite', () => {
       ).rejects.toThrow('Invalid email or password.');
     });
 
-    it('throws error for rate-limited blocked account', async () => {
+    it('throws error for rate-limited blocked account (429)', async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 429,
+        json: async () => ({ message: 'Too many failed login attempts.' }),
+      });
+      vi.stubGlobal('fetch', mockFetch);
+
       await expect(
         authService.login({
           email: 'blocked@example.com',
@@ -41,8 +73,19 @@ describe('AuthService Suite', () => {
     });
   });
 
-  describe('register (mock execution mode)', () => {
+  describe('register', () => {
     it('successfully registers a new account', async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          success: true,
+          message: 'Account created successfully!',
+          token: 'new_user_token',
+          user: { id: 'usr_2', email: 'newuser@truson.io', fullName: 'Test User' },
+        }),
+      });
+      vi.stubGlobal('fetch', mockFetch);
+
       const response = await authService.register({
         fullName: 'Test User',
         email: 'newuser@truson.io',
@@ -54,7 +97,14 @@ describe('AuthService Suite', () => {
       expect(response.user?.fullName).toBe('Test User');
     });
 
-    it('throws error for existing email', async () => {
+    it('throws error for existing email (409)', async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 409,
+        json: async () => ({ message: 'An account with this email address already exists.' }),
+      });
+      vi.stubGlobal('fetch', mockFetch);
+
       await expect(
         authService.register({
           fullName: 'Test User',
@@ -68,6 +118,15 @@ describe('AuthService Suite', () => {
 
   describe('forgotPassword', () => {
     it('sends reset email instructions', async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          success: true,
+          message: 'Password reset instructions have been sent',
+        }),
+      });
+      vi.stubGlobal('fetch', mockFetch);
+
       const response = await authService.forgotPassword({ email: 'user@truson.io' });
       expect(response.success).toBe(true);
       expect(response.message).toContain('Password reset instructions have been sent');
