@@ -25,6 +25,7 @@ describe('AuthService Suite', () => {
         authService.login({
           email: 'user@truson.io',
           password: 'wrongpassword',
+          rememberMe: false,
         })
       ).rejects.toThrow('Invalid email or password.');
     });
@@ -34,6 +35,7 @@ describe('AuthService Suite', () => {
         authService.login({
           email: 'blocked@example.com',
           password: 'anypassword',
+          rememberMe: false,
         })
       ).rejects.toThrow('Too many failed login attempts.');
     });
