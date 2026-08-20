@@ -19,7 +19,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
         <div className="hero-content">
           <div className="brand-logo-container">
             <div className="logo-icon-badge">
-              <ShieldCheck className="brand-icon" size={26} aria-hidden="true" />
+              <img src="/truson-logo.jpg" alt="TRUSON Logo" className="brand-logo-img" />
             </div>
             <span className="brand-name">TRUSON</span>
             <span className="brand-badge-pill">ENTERPRISE</span>
@@ -83,7 +83,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
         <div className="mobile-brand-header">
           <div className="brand-logo-container">
             <div className="logo-icon-badge">
-              <ShieldCheck className="brand-icon" size={24} aria-hidden="true" />
+              <img src="/truson-logo.jpg" alt="TRUSON Logo" className="brand-logo-img" />
             </div>
             <span className="brand-name">TRUSON</span>
             <span className="brand-badge-pill">ENTERPRISE</span>
